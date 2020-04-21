@@ -15,6 +15,7 @@ References:
 import numpy as np 
 import pandas as pd
 import matplotlib.pyplot as plt
+from pylab import rcParams
 
 def ReadData( fileName ):
     """This function takes a filename as input, and returns a dataframe with
@@ -92,20 +93,30 @@ if __name__ == '__main__':
     
     # process input datasets
     for file in fileName.keys():
+        
         DataDF[file], MissingValues[file] = ReadData(fileName[file])
         
         # clip to consistent period - last 5 years
         DataDF[file], MissingValues[file] = ClipData( DataDF[file], '2014-10-01', '2019-09-30' )
         
-    for file in newcsvfiles.keys(): # using the same code structure to read in the Metrics
-        NewDF[file] = ReadMetrics(newcsvfiles[file])
-        
-    
-    # daily flow for both streams for the last 5 years of the record - Original TXT files
-    
+######### daily flow for both streams for the last 5 years of the record - Original TXT files ###############
+        plt.plot(DataDF[file]['Discharge'], label=riverName[file]) # indent so the code runs for both data sets 
+    plt.legend()
+    plt.xlabel('Date')
+    plt.ylabel('Discharge (cfs)')
+    plt.title('Daily Flow of Wildcat Creek and Tippecanoe River - Last 5 Years')
+    rcParams['figure.figsize'] = 7, 5 # figure size in inches (width, height)
+    plt.savefig('DailyFlow.png', dpi = 96)
+    plt.close()    
+  
+########### reading in the metrics data sets################################################################
+      
+    for newfile in newcsvfiles.keys(): # using the same code structure to read in the Metrics
+        NewDF[newfile] = ReadMetrics(newcsvfiles[newfile])
+          
     
     # Annual coefficient of variation - Annual_metrics.csv
-    
+
     
     # Annual TQMean - Annual_metrics.csv
     
