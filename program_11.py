@@ -105,7 +105,7 @@ if __name__ == '__main__':
     plt.xlabel('Date')
     plt.ylabel('Discharge (cfs)')
     plt.title('Daily Flow of Wildcat Creek and Tippecanoe River - Last 5 Years')
-    rcParams['figure.figsize'] = 7, 5 # figure size in inches (width, height)
+    rcParams['figure.figsize'] = 7.5, 5 # figure size in inches (width, height)
     plt.savefig('DailyFlow.png', dpi = 96)
     plt.close()    
   
@@ -118,35 +118,52 @@ if __name__ == '__main__':
     tippe = NewDF['Annual'].loc[NewDF['Annual']['Station']=='Tippe']
     wildcat = NewDF['Annual'].loc[NewDF['Annual']['Station']=='Wildcat']
     
-    # Annual coefficient of variation - Annual_metrics.csv
+    # plotting Annual coefficient of variation - Annual_metrics.csv
     plt.plot(tippe['Coeff Var'],'ko')
     plt.plot(wildcat['Coeff Var'],'ro')  
     plt.legend([riverName['Wildcat'],riverName['Tippe']], loc='best')
-    plt.xlabel('Date')
-    plt.ylabel('Coefficient of Variation')
-    plt.title('Coefficient of Variation of Flow for Wildcat Creek and Tippecanoe River')
+    plt.xlabel('Date', fontsize = 14)
+    plt.ylabel('Coefficient of Variation (unitless)', fontsize = 14)
+    plt.title('Coefficient of Variation of Flow', fontsize = 14)
+    rcParams['figure.figsize'] = 7, 5 # figure size in inches (width, height)
     plt.savefig('Coeff_Var.png', dpi = 96)
     plt.close()  
     
-    # Annual TQMean - Annual_metrics.csv
+    # plotting Annual TQMean - Annual_metrics.csv
     plt.plot(tippe['Tqmean'],'ko')
     plt.plot(wildcat['Tqmean'],'ro')   
-    plt.legend([riverName['Wildcat'],riverName['Tippe']])
-    plt.xlabel('Date')
-    plt.ylabel('')
-    plt.title(' of Wildcat Creek and Tippecanoe River')
+    plt.legend([riverName['Tippe'],riverName['Wildcat']], loc='best')
+    plt.xlabel('Date', fontsize = 14)
+    plt.ylabel('Time (Days)', fontsize = 14)
+    plt.title('Fraction of Days that Flow Exceeds Mean Annual Flow \n(T-Q Mean)', fontsize = 14)
+    rcParams['figure.figsize'] = 7, 5 # figure size in inches (width, height)
     plt.savefig('Tqmean.png', dpi = 96)
     plt.close()  
     
-    # Annual RB-Index - Annual_metrics.csv
+    # plotting Annual RB-Index - Annual_metrics.csv
     plt.plot(tippe['R-B Index'],'ko')
     plt.plot(wildcat['R-B Index'],'ro')   
-    plt.legend([riverName['Wildcat'],riverName['Tippe']])
-    plt.xlabel('Date')
-    plt.ylabel('')
-    plt.title(' of Wildcat Creek and Tippecanoe River')
+    plt.legend([riverName['Wildcat'],riverName['Tippe']], loc='best')
+    plt.xlabel('Date', fontsize = 14)
+    plt.ylabel('R-B Index (cfs/cfs)', fontsize = 14)
+    plt.title('Richards-Baker Flashiness Index \n(R-B Index)', fontsize = 14)
+    rcParams['figure.figsize'] = 7, 5 # figure size in inches (width, height)
     plt.savefig('RBindex.png', dpi = 96)
     plt.close()      
+    
+    # Function from assingment 10 to get data needed to average annual monthly flow 
+    # GetMonthlyAverages and GetMonthlyStatistics
+    
+    # plotting average annual monthly flow 
+    plt.plot([''],'ko')
+    plt.plot([''],'ro')   
+    plt.legend([riverName['Wildcat'],riverName['Tippe']], loc='best')
+    plt.xlabel('Date', fontsize = 14)
+    plt.ylabel('Discharge (cfs)', fontsize = 14)
+    plt.title('', fontsize = 14)
+    rcParams['figure.figsize'] = 7, 5 # figure size in inches (width, height)
+    plt.savefig('Avg_Annual_Flow.png', dpi = 96)
+    plt.close()          
     
     # Return period of annual peal flow events - 
  
