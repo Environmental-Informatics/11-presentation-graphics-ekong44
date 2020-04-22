@@ -114,15 +114,39 @@ if __name__ == '__main__':
     for newfile in newcsvfiles.keys(): # using the same code structure to read in the Metrics
         NewDF[newfile] = ReadMetrics(newcsvfiles[newfile])
           
+    # isolate the data by station name 
+    tippe = NewDF['Annual'].loc[NewDF['Annual']['Station']=='Tippe']
+    wildcat = NewDF['Annual'].loc[NewDF['Annual']['Station']=='Wildcat']
     
     # Annual coefficient of variation - Annual_metrics.csv
-
+    plt.plot(tippe['Coeff Var'],'ko')
+    plt.plot(wildcat['Coeff Var'],'ro')  
+    plt.legend([riverName['Wildcat'],riverName['Tippe']], loc='best')
+    plt.xlabel('Date')
+    plt.ylabel('Coefficient of Variation')
+    plt.title('Coefficient of Variation of Flow for Wildcat Creek and Tippecanoe River')
+    plt.savefig('Coeff_Var.png', dpi = 96)
+    plt.close()  
     
     # Annual TQMean - Annual_metrics.csv
-    
+    plt.plot(tippe['Tqmean'],'ko')
+    plt.plot(wildcat['Tqmean'],'ro')   
+    plt.legend([riverName['Wildcat'],riverName['Tippe']])
+    plt.xlabel('Date')
+    plt.ylabel('')
+    plt.title(' of Wildcat Creek and Tippecanoe River')
+    plt.savefig('Tqmean.png', dpi = 96)
+    plt.close()  
     
     # Annual RB-Index - Annual_metrics.csv
-    
+    plt.plot(tippe['R-B Index'],'ko')
+    plt.plot(wildcat['R-B Index'],'ro')   
+    plt.legend([riverName['Wildcat'],riverName['Tippe']])
+    plt.xlabel('Date')
+    plt.ylabel('')
+    plt.title(' of Wildcat Creek and Tippecanoe River')
+    plt.savefig('RBindex.png', dpi = 96)
+    plt.close()      
     
     # Return period of annual peal flow events - 
  
