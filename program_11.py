@@ -17,6 +17,8 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from pylab import rcParams
 
+monthlycolumnheader = ['Mean Flow','Coeff Var','Tqmean','R-B Index'];
+
 def ReadData( fileName ):
     """This function takes a filename as input, and returns a dataframe with
     raw data read from that file in a Pandas DataFrame.  The DataFrame index
@@ -41,10 +43,7 @@ def ReadData( fileName ):
     # check for negative streamflow 
     DataDF.loc[~(DataDF['Discharge'] > 0), 'Discharge'] = np.nan
     
-    # quantify the number of missing and negative values
-    MissingValues = DataDF["Discharge"].isna().sum()   
-    
-    return( DataDF, MissingValues )
+    return( DataDF )
 
 def ClipData( DataDF, startDate, endDate ):
     """This function clips the given time series dataframe to a given range 
@@ -53,9 +52,8 @@ def ClipData( DataDF, startDate, endDate ):
     
     # isolate the date range we want to work with
     DataDF = DataDF.loc[startDate:endDate] # start and end date defined in line 273
-    MissingValues = DataDF["Discharge"].isna().sum() # quantify the number of missing values
 
-    return( DataDF, MissingValues )
+    return( DataDF )
     
 def ReadMetrics( newcsvfiles ):
     """This function takes a filename as input, and returns a dataframe with
@@ -67,9 +65,27 @@ def ReadMetrics( newcsvfiles ):
     NewDF = pd.read_csv(newcsvfiles, header=0, delimiter=',', parse_dates=['Date'], comment='#', index_col=['Date']) 
     return( NewDF )
 
-# the following condition checks whether we are running as a script, in which 
-# case run the test code, otherwise functions are being imported so do not.
-# put the main routines from your code after this conditional check.
+def GetMonthlyStatistics( stripped_monthly ):
+    """This function calculates monthly descriptive statistics and metrics 
+    for the given streamflow time series. Values are returned as a dataframe
+    of monthly values for each year."""
+    
+    # combination of GetMonthlyAverages and GetMonthlyStatistics from assignment 10
+    # take the clipped data and resample it. Group by month 
+
+    monthly_index = stripped_monthly.resample('MS').mean() # resample index - monthly
+    MoDataDF = pd.DataFrame(index = monthly_index.index, columns = monthlycolumnheader) # setting new DF with proper index and headers
+    MDF = stripped_monthly.resample('MS') # resampled DF stored as a simple variable name 
+    
+    #metrics and statistics 
+    MoDataDF['Discharge'] = MDF['Discharge'].mean()
+    
+    isolated_months = MoDataDF.index.month # tip for extracting month from Cherkauer
+    MoDataDF = MoDataDF.groupby(isolated_months).mean() # group the new DF using the months and find the mean of that data
+
+    return ( MoDataDF )
+
+############################################################################################################################################
     
 if __name__ == '__main__':    
 
@@ -88,17 +104,16 @@ if __name__ == '__main__':
     
     # define blank dictionaries (these will use the same keys as fileName)
     DataDF = {}
-    MissingValues = {} 
     NewDF = {}
     
     # process input datasets
     for file in fileName.keys():
         
-        DataDF[file], MissingValues[file] = ReadData(fileName[file])
+        DataDF[file] = ReadData( fileName[file] ) # clip to consistent period - last 5 years
         
-        # clip to consistent period - last 5 years
-        DataDF[file], MissingValues[file] = ClipData( DataDF[file], '2014-10-01', '2019-09-30' )
+        DataDF[file] = ClipData( DataDF[file], '2014-10-01', '2019-09-30' ) # clip to consistent period - last 5 years
         
+          
 ######### daily flow for both streams for the last 5 years of the record - Original TXT files ###############
         plt.plot(DataDF[file]['Discharge'], label=riverName[file]) # indent so the code runs for both data sets 
     plt.legend()
@@ -119,6 +134,7 @@ if __name__ == '__main__':
     wildcat = NewDF['Annual'].loc[NewDF['Annual']['Station']=='Wildcat']
     
     # plotting Annual coefficient of variation - Annual_metrics.csv
+    # date range 50 years
     plt.plot(tippe['Coeff Var'],'ko')
     plt.plot(wildcat['Coeff Var'],'ro')  
     plt.legend([riverName['Wildcat'],riverName['Tippe']], loc='best')
@@ -151,16 +167,23 @@ if __name__ == '__main__':
     plt.savefig('RBindex.png', dpi = 96)
     plt.close()      
     
-    # Function from assingment 10 to get data needed to average annual monthly flow 
-    # GetMonthlyAverages and GetMonthlyStatistics
-    
     # plotting average annual monthly flow 
-    plt.plot([''],'ko')
-    plt.plot([''],'ro')   
+    test1 = ReadData('TippecanoeRiver_Discharge_03331500_19431001-20200315.txt') # unprocessed txt file
+    Raw_Tippe = ClipData(test1,'1969-10-01','2019-09-30') # clip text file to date range
+    tippe_month = GetMonthlyStatistics(Raw_Tippe) # use function to process them
+    
+    test2 = ReadData('WildcatCreek_Discharge_03335000_19540601-20200315.txt')
+    Raw_Wild = ClipData(test2, '1969-10-01','2019-09-30')
+    wild_month = GetMonthlyStatistics(Raw_Wild)
+    # same values as the MonthlyAverages dict/DF in assignment 10
+    
+    plt.plot(wild_month['Discharge'],'ko')
+    plt.plot(tippe_month['Discharge'],'ro')   
     plt.legend([riverName['Wildcat'],riverName['Tippe']], loc='best')
-    plt.xlabel('Date', fontsize = 14)
+    plt.xlabel('Month', fontsize = 14)
+    plt.xticks(np.arange(1, 13, 1)) # show all months on axis
     plt.ylabel('Discharge (cfs)', fontsize = 14)
-    plt.title('', fontsize = 14)
+    plt.title('Average Annual Monthly Flow', fontsize = 14)
     rcParams['figure.figsize'] = 7, 5 # figure size in inches (width, height)
     plt.savefig('Avg_Annual_Flow.png', dpi = 96)
     plt.close()          
