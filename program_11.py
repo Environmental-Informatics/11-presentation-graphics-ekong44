@@ -4,21 +4,19 @@
 """
 Template by Professor Cherkauer
 Edited by Eric Kong on April 18th, 2020.
-
 Description: This script builds on Assignment 10. The summary metric tables 
             that are outputted are used to generate figures for an oral presentation
             that will not need to be given. 
     
 References:
-    https://stackoverflow.com/questions/3777861/setting-y-axis-limit-in-matplotlib
 """
+monthlycolumnheader = ['Discharge'];
+
 # Importing modules
 import numpy as np 
 import pandas as pd
 import matplotlib.pyplot as plt
 from pylab import rcParams
-
-monthlycolumnheader = ['Mean Flow','Coeff Var','Tqmean','R-B Index'];
 
 def ReadData( fileName ):
     """This function takes a filename as input, and returns a dataframe with
@@ -44,7 +42,10 @@ def ReadData( fileName ):
     # check for negative streamflow 
     DataDF.loc[~(DataDF['Discharge'] > 0), 'Discharge'] = np.nan
     
-    return( DataDF )
+    # quantify the number of missing and negative values
+    MissingValues = DataDF["Discharge"].isna().sum()   
+    
+    return( DataDF, MissingValues )
 
 def ClipData( DataDF, startDate, endDate ):
     """This function clips the given time series dataframe to a given range 
@@ -53,8 +54,9 @@ def ClipData( DataDF, startDate, endDate ):
     
     # isolate the date range we want to work with
     DataDF = DataDF.loc[startDate:endDate] # start and end date defined in line 273
+    MissingValues = DataDF["Discharge"].isna().sum() # quantify the number of missing values
 
-    return( DataDF )
+    return( DataDF, MissingValues )
     
 def ReadMetrics( newcsvfiles ):
     """This function takes a filename as input, and returns a dataframe with
@@ -86,7 +88,9 @@ def GetMonthlyStatistics( stripped_monthly ):
 
     return ( MoDataDF )
 
-############################################################################################################################################
+# the following condition checks whether we are running as a script, in which 
+# case run the test code, otherwise functions are being imported so do not.
+# put the main routines from your code after this conditional check.
     
 if __name__ == '__main__':    
 
@@ -105,23 +109,24 @@ if __name__ == '__main__':
     
     # define blank dictionaries (these will use the same keys as fileName)
     DataDF = {}
+    MissingValues = {} 
     NewDF = {}
     
     # process input datasets
     for file in fileName.keys():
         
-        DataDF[file] = ReadData( fileName[file] ) # clip to consistent period - last 5 years
+        DataDF[file], MissingValues[file] = ReadData(fileName[file])
         
-        DataDF[file] = ClipData( DataDF[file], '2014-10-01', '2019-09-30' ) # clip to consistent period - last 5 years
+        # clip to consistent period - last 5 years
+        DataDF[file], MissingValues[file] = ClipData( DataDF[file], '1969-10-01', '2019-09-30' )
         
-          
 ######### daily flow for both streams for the last 5 years of the record - Original TXT files ###############
-        plt.plot(DataDF[file]['Discharge'], label=riverName[file]) # indent so the code runs for both data sets 
+        plt.plot(DataDF[file]['2014-10-01':'2019-09-30']['Discharge'], label=riverName[file]) # indent so the code runs for both data sets 
     plt.legend()
     plt.xlabel('Date')
     plt.ylabel('Discharge (cfs)')
     plt.title('Daily Flow of Wildcat Creek and Tippecanoe River - Last 5 Years')
-    rcParams['figure.figsize'] = 7.5, 5 # figure size in inches (width, height)
+    rcParams['figure.figsize'] = 7, 5 # figure size in inches (width, height)
     plt.savefig('DailyFlow.png', dpi = 96)
     plt.close()    
   
@@ -138,7 +143,7 @@ if __name__ == '__main__':
     # date range 50 years
     plt.plot(tippe['Coeff Var'],'ko')
     plt.plot(wildcat['Coeff Var'],'ro')  
-    plt.legend([riverName['Wildcat'],riverName['Tippe']], loc='best')
+    plt.legend([riverName['Wildcat'],riverName['Tippe']], loc='upper left')
     plt.xlabel('Date', fontsize = 14)
     plt.ylabel('Coefficient of Variation (unitless)', fontsize = 14)
     plt.title('Coefficient of Variation of Flow', fontsize = 14)
@@ -166,20 +171,18 @@ if __name__ == '__main__':
     plt.title('Richards-Baker Flashiness Index \n(R-B Index)', fontsize = 14)
     rcParams['figure.figsize'] = 7, 5 # figure size in inches (width, height)
     plt.savefig('RBindex.png', dpi = 96)
-    plt.close()      
+    plt.close()    
     
-    # plotting average annual monthly flow 
-    test1 = ReadData('TippecanoeRiver_Discharge_03331500_19431001-20200315.txt') # unprocessed txt file
-    Raw_Tippe = ClipData(test1,'1969-10-01','2019-09-30') # clip text file to date range
-    tippe_month = GetMonthlyStatistics(Raw_Tippe) # use function to process them
+#    # plotting average annual monthly flow 
+    raw_tippe = DataDF['Tippe']['Discharge'].to_frame() # use function to process them
+    raw_wild = DataDF['Wildcat']['Discharge'].to_frame()
     
-    test2 = ReadData('WildcatCreek_Discharge_03335000_19540601-20200315.txt')
-    Raw_Wild = ClipData(test2, '1969-10-01','2019-09-30')
-    wild_month = GetMonthlyStatistics(Raw_Wild)
-    # same values as the MonthlyAverages dict/DF in assignment 10
-    
-    plt.plot(wild_month['Discharge'],'ko')
-    plt.plot(tippe_month['Discharge'],'ro')   
+    process_t = GetMonthlyStatistics(raw_tippe)
+    process_w = GetMonthlyStatistics(raw_wild)
+#    
+#    # same values as the MonthlyAverages dict/DF in assignment 10
+    plt.plot(process_w['Discharge'],'ko')
+    plt.plot(process_t['Discharge'],'ro')   
     plt.legend([riverName['Wildcat'],riverName['Tippe']], loc='best')
     plt.xlabel('Month', fontsize = 14)
     plt.xticks(np.arange(1, 13, 1)) # show all months on axis
@@ -187,9 +190,10 @@ if __name__ == '__main__':
     plt.title('Average Annual Monthly Flow', fontsize = 14)
     rcParams['figure.figsize'] = 7, 5 # figure size in inches (width, height)
     plt.savefig('Avg_Annual_Flow.png', dpi = 96)
-    plt.close()          
+    plt.close()         
     
-    # Return period of annual peak flow events - Annual_metrics.csv
+    
+    # Return period of annual peal flow events - 
     sort_wild = wildcat.sort_values('Peak Flow', ascending = False) # sort annual wildcat data with highest at the top 
     sort_tippe = tippe.sort_values('Peak Flow', ascending = False) # sort annual tippe data with highest at the top 
     
@@ -208,5 +212,4 @@ if __name__ == '__main__':
     plt.title('Return Period of Annual Peak Flow Events', fontsize = 14)
     rcParams['figure.figsize'] = 7, 5 # figure size in inches (width, height)
     plt.savefig('Period_Peak.png', dpi = 96)
-    plt.close()  
- 
+    plt.close()     
