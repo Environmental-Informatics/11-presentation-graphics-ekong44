@@ -10,6 +10,7 @@ Description: This script builds on Assignment 10. The summary metric tables
             that will not need to be given. 
     
 References:
+    https://stackoverflow.com/questions/3777861/setting-y-axis-limit-in-matplotlib
 """
 # Importing modules
 import numpy as np 
@@ -188,5 +189,24 @@ if __name__ == '__main__':
     plt.savefig('Avg_Annual_Flow.png', dpi = 96)
     plt.close()          
     
-    # Return period of annual peal flow events - 
+    # Return period of annual peak flow events - Annual_metrics.csv
+    sort_wild = wildcat.sort_values('Peak Flow', ascending = False) # sort annual wildcat data with highest at the top 
+    sort_tippe = tippe.sort_values('Peak Flow', ascending = False) # sort annual tippe data with highest at the top 
+    
+    sort_wild['Rank'] = np.arange(1,51,1) # highest flow is rank one 
+    sort_tippe['Rank'] = np.arange(1,51,1)
+    
+    sort_tippe['exceed_prob'] = sort_tippe['Rank'] / 51 # plotting positions is equal to rank divided by 51 observations 
+    sort_wild['exceed_prob'] = sort_wild['Rank'] / 51
+    
+    plt.plot(sort_wild['exceed_prob'], sort_wild['Peak Flow'], 'ko')
+    plt.plot(sort_tippe['exceed_prob'], sort_tippe['Peak Flow'], 'ro')   
+    plt.legend([riverName['Wildcat'],riverName['Tippe']], loc='best')
+    plt.xlabel('Exceedence Probability', fontsize = 14)
+    plt.xlim(1,0) # flip x-axis
+    plt.ylabel('Peak Discharge (cfs)', fontsize = 14)
+    plt.title('Return Period of Annual Peak Flow Events', fontsize = 14)
+    rcParams['figure.figsize'] = 7, 5 # figure size in inches (width, height)
+    plt.savefig('Period_Peak.png', dpi = 96)
+    plt.close()  
  
